@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  qwen-generator:
+    build: .
+    image: qwen-image-generator:latest
+    ports:
+      - "${PORT:-8080}:8080"
+    env_file:
+      - .env
+    environment:
+      - PORT=${PORT:-8080}
+      - TRANSFORMERS_CACHE=/app/cache
+      - HF_HOME=/app/cache
+      - MODEL_NAME=${MODEL_NAME:-Qwen/Qwen-Image}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - S3_BUCKET=${S3_BUCKET}
+      - NUM_INFERENCE_STEPS=${NUM_INFERENCE_STEPS:-50}
+      - TRUE_CFG_SCALE=${TRUE_CFG_SCALE:-4.0}
+      - DEFAULT_SEED=${DEFAULT_SEED:-42}
+    volumes:
+      - ./cache:/app/cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

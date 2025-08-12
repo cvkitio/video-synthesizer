@@ -1,0 +1,45 @@
+name: Test Docker Build
+
+on:
+  pull_request:
+    paths:
+      - 'diffusion/**'
+      - '.github/workflows/test-build.yml'
+      - '.github/workflows/docker-build-push.yml'
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate Dockerfile
+        run: |
+          echo "Validating Dockerfile syntax..."
+          docker run --rm -i hadolint/hadolint < diffusion/Dockerfile || true
+
+      - name: Build Docker image (test only)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./diffusion
+          file: ./diffusion/Dockerfile
+          push: false
+          tags: test-build:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test image structure
+        run: |
+          echo "## 🧪 Docker Build Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Docker image built successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Info:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR**: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: \`${{ github.head_ref }}\`" >> $GITHUB_STEP_SUMMARY

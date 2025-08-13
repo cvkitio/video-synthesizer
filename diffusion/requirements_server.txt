@@ -1,5 +1,6 @@
-# Main packages
-torch==2.8.0
+# Main packages - CUDA 11.8 compatible versions
+torch>=2.0.0,<2.5.0
+torchvision>=0.15.0,<0.20.0
 diffusers @ git+https://github.com/huggingface/diffusers@3552279a23e5ba60d599f4aa8e5b90555b7ce559
 transformers>=4.44.0
 accelerate>=1.0.0
@@ -7,5 +8,5 @@ flask>=3.0.0
 boto3>=1.30.0
 python-dotenv>=1.0.0
 
-# Let pip resolve CUDA dependencies automatically with torch 2.8.0
-# PyTorch 2.8.0 will install compatible NVIDIA CUDA packages automatically
+# Let pip resolve CUDA dependencies automatically with torch
+# Using torch < 2.5.0 for CUDA 11.8 compatibility

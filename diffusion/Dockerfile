@@ -1,6 +1,6 @@
-# Use current NVIDIA CUDA 12.8 image (updated from deprecated 12.1.0)
-# This resolves the undefined symbol errors with newer PyTorch versions
-FROM nvidia/cuda:12.8.0-cudnn-runtime-ubuntu22.04
+# Use CUDA 11.8 for broader compatibility with older GPU drivers
+# CUDA 11.8 is widely supported and works with most deployments
+FROM nvidia/cuda:11.8-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -22,7 +22,7 @@ WORKDIR /app
 
 COPY requirements_server.txt .
 
-# Upgrade pip and install PyTorch with CUDA 12.8 support
+# Upgrade pip and install PyTorch with CUDA 11.8 support
 RUN python -m pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements_server.txt
 

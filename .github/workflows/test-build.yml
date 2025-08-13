@@ -24,7 +24,7 @@ jobs:
           docker run --rm -i hadolint/hadolint < diffusion/Dockerfile || true
 
       - name: Build Docker image (test only)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./diffusion
           file: ./diffusion/Dockerfile

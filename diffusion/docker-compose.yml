@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   qwen-generator:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     image: qwen-image-generator:latest
     ports:
       - "${PORT:-8080}:8080"

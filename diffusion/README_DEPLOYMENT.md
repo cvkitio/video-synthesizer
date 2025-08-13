@@ -118,10 +118,10 @@ The repository includes GitHub Actions workflows that automatically build and pu
 Instead of building locally, you can use the pre-built images from GHCR:
 ```bash
 # Pull the latest image
-docker pull ghcr.io/sinkers/video-synthesizer-qwen:latest
+docker pull ghcr.io/cvkitio/video-synthesizer-qwen:latest
 
 # Run with your .env file
-docker run -p 8080:8080 --gpus all --env-file .env ghcr.io/sinkers/video-synthesizer-qwen:latest
+docker run -p 8080:8080 --gpus all --env-file .env ghcr.io/cvkitio/video-synthesizer-qwen:latest
 ```
 
 ### Workflow Files
@@ -184,14 +184,26 @@ This will create configuration files and provide multiple deployment options:
 
 ### Using the Python Deployment Script
 ```bash
-pip install requests
+pip install runpod python-dotenv
 python deploy_runpod.py
 ```
+
+### RunPod URL Format
+When a pod is deployed, it will be accessible via RunPod's proxy service:
+```
+http://{POD_ID}-8080.proxy.runpod.net/
+```
+
+For example, if your pod ID is `zwi3zrty402ecv`, the URLs will be:
+- **API Base**: `http://zwi3zrty402ecv-8080.proxy.runpod.net/`
+- **Health Check**: `http://zwi3zrty402ecv-8080.proxy.runpod.net/health`
+- **Generate Images**: `http://zwi3zrty402ecv-8080.proxy.runpod.net/generate`
 
 ## GPU Requirements
 - Minimum: NVIDIA GPU with 8GB VRAM
 - Recommended: NVIDIA RTX A4000 or better
-- CUDA 12.1+ compatible
+- CUDA 12.8+ compatible (updated from deprecated 12.1.0)
+- Docker image uses `nvidia/cuda:12.8.0-cudnn-runtime-ubuntu22.04`
 
 ## Security Notes
 - Never commit AWS credentials to version control

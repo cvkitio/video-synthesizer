@@ -1,6 +1,6 @@
 # Use CUDA 11.8 for broader compatibility with older GPU drivers
 # CUDA 11.8 is widely supported and works with most deployments
-FROM nvidia/cuda:11.8-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1

@@ -19,6 +19,8 @@ TEMPLATE_NAME=${TEMPLATE_NAME:-"qwen-image-generator-template"}
 POD_NAME=${POD_NAME:-"qwen-generator-pod"}
 GPU_TYPE=${GPU_TYPE:-"NVIDIA RTX A4000"}
 GPU_COUNT=${GPU_COUNT:-1}
+CONTAINER_DISK_GB=${CONTAINER_DISK_GB:-100}
+VOLUME_DISK_GB=${VOLUME_DISK_GB:-100}
 
 if [ -z "$RUNPOD_API_KEY" ]; then
     echo "Error: RUNPOD_API_KEY environment variable is not set"
@@ -35,7 +37,7 @@ cat > runpod_template.json <<EOF
   "imageName": "${IMAGE_URL}",
   "dockerArgs": "",
   "ports": "8080/http",
-  "volumeInGb": 50,
+  "volumeInGb": ${VOLUME_DISK_GB},
   "volumeMountPath": "/workspace",
   "env": [
     {
@@ -62,8 +64,8 @@ cat > runpod_deploy.json <<EOF
   "cloudType": "SECURE",
   "gpuType": "${GPU_TYPE}",
   "gpuCount": ${GPU_COUNT},
-  "containerDiskInGb": 50,
-  "volumeInGb": 50,
+  "containerDiskInGb": ${CONTAINER_DISK_GB},
+  "volumeInGb": ${VOLUME_DISK_GB},
   "minMemoryInGb": 16,
   "minVcpuCount": 4,
   "name": "${POD_NAME}",
@@ -159,6 +161,8 @@ class QwenRunPodDeployer:
         self.pod_name = os.getenv("POD_NAME", "qwen-generator-pod")
         self.gpu_type = os.getenv("GPU_TYPE", "NVIDIA RTX A4000")
         self.gpu_count = int(os.getenv("GPU_COUNT", "1"))
+        self.container_disk_gb = int(os.getenv("CONTAINER_DISK_GB", "100"))
+        self.volume_disk_gb = int(os.getenv("VOLUME_DISK_GB", "100"))
         
         # Use the correct image URL format for the GitHub Actions workflow
         self.image_url = "ghcr.io/cvkitio/video-synthesizer-qwen:latest"
@@ -176,8 +180,8 @@ class QwenRunPodDeployer:
                 image_name=self.image_url,
                 gpu_type_id=self.gpu_type,
                 cloud_type="SECURE",
-                container_disk_in_gb=50,
-                volume_in_gb=50,
+                container_disk_in_gb=self.container_disk_gb,
+                volume_in_gb=self.volume_disk_gb,
                 min_memory_in_gb=16,
                 min_vcpu_count=4,
                 ports="8080/http",

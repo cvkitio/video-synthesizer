@@ -1,6 +1,6 @@
 # Main packages - CUDA 11.8 compatible versions
 torch>=2.0.0,<2.5.0
-torchvision>=0.15.0,<0.20.0
+torchvision>=0.15.0,<0.24.0
 diffusers @ git+https://github.com/huggingface/diffusers@3552279a23e5ba60d599f4aa8e5b90555b7ce559
 transformers>=4.44.0
 accelerate>=1.0.0

@@ -2,7 +2,7 @@ accelerate==1.10.0
 certifi==2025.8.3
 charset-normalizer==3.4.3
 diffusers @ git+https://github.com/huggingface/diffusers@3552279a23e5ba60d599f4aa8e5b90555b7ce559
-filelock==3.18.0
+filelock==3.32.6
 fsspec==2025.7.0
 hf-xet==1.1.7
 huggingface-hub==0.34.4

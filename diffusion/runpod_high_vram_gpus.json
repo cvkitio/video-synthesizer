@@ -1,0 +1,87 @@
+[
+  {
+    "id": "AMD Instinct MI300X OAM",
+    "displayName": "MI300X",
+    "memoryInGb": 192
+  },
+  {
+    "id": "NVIDIA B200",
+    "displayName": "B200",
+    "memoryInGb": 180
+  },
+  {
+    "id": "NVIDIA H200",
+    "displayName": "H200 SXM",
+    "memoryInGb": 141
+  },
+  {
+    "id": "NVIDIA RTX PRO 6000 Blackwell Workstation Edition",
+    "displayName": "RTX PRO 6000",
+    "memoryInGb": 96
+  },
+  {
+    "id": "NVIDIA H100 NVL",
+    "displayName": "H100 NVL",
+    "memoryInGb": 94
+  },
+  {
+    "id": "NVIDIA A100 80GB PCIe",
+    "displayName": "A100 PCIe",
+    "memoryInGb": 80
+  },
+  {
+    "id": "NVIDIA A100-SXM4-80GB",
+    "displayName": "A100 SXM",
+    "memoryInGb": 80
+  },
+  {
+    "id": "NVIDIA H100 80GB HBM3",
+    "displayName": "H100 SXM",
+    "memoryInGb": 80
+  },
+  {
+    "id": "NVIDIA H100 PCIe",
+    "displayName": "H100 PCIe",
+    "memoryInGb": 80
+  },
+  {
+    "id": "NVIDIA A40",
+    "displayName": "A40",
+    "memoryInGb": 48
+  },
+  {
+    "id": "NVIDIA L40",
+    "displayName": "L40",
+    "memoryInGb": 48
+  },
+  {
+    "id": "NVIDIA L40S",
+    "displayName": "L40S",
+    "memoryInGb": 48
+  },
+  {
+    "id": "NVIDIA RTX 6000 Ada Generation",
+    "displayName": "RTX 6000 Ada",
+    "memoryInGb": 48
+  },
+  {
+    "id": "NVIDIA RTX A6000",
+    "displayName": "RTX A6000",
+    "memoryInGb": 48
+  },
+  {
+    "id": "NVIDIA GeForce RTX 5090",
+    "displayName": "RTX 5090",
+    "memoryInGb": 32
+  },
+  {
+    "id": "NVIDIA RTX 5000 Ada Generation",
+    "displayName": "RTX 5000 Ada",
+    "memoryInGb": 32
+  },
+  {
+    "id": "Tesla V100-SXM2-32GB",
+    "displayName": "V100 SXM2 32GB",
+    "memoryInGb": 32
+  }
+]

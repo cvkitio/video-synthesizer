@@ -188,6 +188,23 @@ pip install runpod python-dotenv
 python deploy_runpod.py
 ```
 
+### GPU Selection and Availability
+
+Before deploying, you can check GPU availability and pricing:
+
+```bash
+# List all available GPUs with pricing
+python list_runpod_gpus.py
+
+# Quick availability check
+python check_gpu_availability.py
+
+# Find specific GPU ID for configuration
+python find_gpu_id.py "RTX 4090"
+```
+
+**Important**: Use the exact GPU ID format from RunPod (e.g., `"NVIDIA GeForce RTX 4090"` not just `"RTX 4090"`)
+
 ### RunPod URL Format
 When a pod is deployed, it will be accessible via RunPod's proxy service:
 ```

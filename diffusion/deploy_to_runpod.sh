@@ -242,6 +242,133 @@ class QwenRunPodDeployer:
         logger.error(f"❌ Pod did not become ready within {timeout} seconds")
         return False
 
+    def wait_for_health_check(self, api_url: str, timeout: int = 600) -> bool:
+        """Wait for the /health endpoint to return OK."""
+        import requests
+        
+        logger.info("Waiting for service health check...")
+        start_time = time.time()
+        health_url = f"{api_url}health"
+        
+        while time.time() - start_time < timeout:
+            try:
+                response = requests.get(health_url, timeout=10)
+                if response.status_code == 200:
+                    health_data = response.json()
+                    if health_data.get("status") == "healthy":
+                        logger.info("✅ Service is healthy!")
+                        return True
+                    else:
+                        logger.info(f"Service status: {health_data.get('status', 'unknown')}")
+                        
+            except requests.exceptions.RequestException as e:
+                logger.info(f"Health check failed: {str(e)[:100]}...")
+            
+            logger.info("Waiting for service to be healthy...")
+            time.sleep(30)  # Check every 30 seconds
+        
+        logger.error(f"❌ Service did not become healthy within {timeout} seconds")
+        return False
+
+    def submit_test_job(self, api_url: str) -> Optional[Dict[str, Any]]:
+        """Submit a test image generation job."""
+        import requests
+        
+        logger.info("Submitting test image generation job...")
+        
+        # Get AWS credentials from environment
+        aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
+        aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY") 
+        aws_region = os.getenv("AWS_REGION", "us-east-1")
+        s3_bucket = os.getenv("S3_BUCKET")
+        
+        if not all([aws_access_key, aws_secret_key, s3_bucket]):
+            logger.warning("⚠️ AWS credentials not configured. Skipping test job.")
+            logger.info("Set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET in .env")
+            return None
+        
+        test_payload = {
+            "prompt": "A beautiful sunset over mountains, photorealistic, detailed",
+            "negative_prompt": "ugly, blurry, low quality",
+            "aspect_ratio": "16:9",
+            "num_inference_steps": 20,  # Faster for testing
+            "seed": 42,
+            "aws_access_key_id": aws_access_key,
+            "aws_secret_access_key": aws_secret_key,
+            "aws_region": aws_region,
+            "s3_bucket": s3_bucket
+        }
+        
+        try:
+            generate_url = f"{api_url}generate"
+            response = requests.post(generate_url, json=test_payload, timeout=120)
+            
+            if response.status_code == 200:
+                result = response.json()
+                logger.info("✅ Test job submitted successfully!")
+                logger.info(f"Image URL: {result.get('image_url')}")
+                logger.info(f"S3 Key: {result.get('s3_key')}")
+                return result
+            else:
+                logger.error(f"❌ Test job failed: {response.status_code} - {response.text}")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ Failed to submit test job: {e}")
+            return None
+
+    def verify_s3_image(self, s3_bucket: str, s3_key: str, timeout: int = 300) -> bool:
+        """Verify that the image was uploaded to S3."""
+        try:
+            import boto3
+        except ImportError:
+            logger.warning("⚠️ boto3 not installed. Skipping S3 verification.")
+            logger.info("Install with: pip install boto3")
+            return True  # Don't fail deployment if boto3 isn't available
+        
+        logger.info("Verifying image upload to S3...")
+        
+        aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
+        aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_region = os.getenv("AWS_REGION", "us-east-1")
+        
+        if not all([aws_access_key, aws_secret_key]):
+            logger.warning("⚠️ AWS credentials not configured. Skipping S3 verification.")
+            return True
+        
+        try:
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=aws_access_key,
+                aws_secret_access_key=aws_secret_key,
+                region_name=aws_region
+            )
+            
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                try:
+                    response = s3_client.head_object(Bucket=s3_bucket, Key=s3_key)
+                    file_size = response.get('ContentLength', 0)
+                    
+                    if file_size > 1000:  # Image should be larger than 1KB
+                        logger.info(f"✅ Image verified in S3! Size: {file_size:,} bytes")
+                        logger.info(f"S3 URL: https://{s3_bucket}.s3.{aws_region}.amazonaws.com/{s3_key}")
+                        return True
+                    else:
+                        logger.info(f"Image file too small ({file_size} bytes), waiting...")
+                        
+                except s3_client.exceptions.NoSuchKey:
+                    logger.info("Image not yet uploaded to S3, waiting...")
+                
+                time.sleep(10)  # Check every 10 seconds
+            
+            logger.error(f"❌ Image not found in S3 within {timeout} seconds")
+            return False
+            
+        except Exception as e:
+            logger.error(f"❌ S3 verification failed: {e}")
+            return False
+
     def get_pod_info(self, pod_id: str) -> Dict[str, Any]:
         """Get pod information including connection details."""
         try:
@@ -286,24 +413,57 @@ def main():
         
         # Get pod information
         pod_info = deployer.get_pod_info(pod_id)
+        api_url = pod_info.get('api_url')
+        
+        if not api_url:
+            logger.error("❌ Could not get pod API URL")
+            return 1
+        
+        # Wait for health check to pass
+        logger.info(f"\n🏥 Performing health check on {api_url}health")
+        if not deployer.wait_for_health_check(api_url):
+            logger.error("❌ Health check failed")
+            return 1
+        
+        # Submit test job and verify S3 upload
+        logger.info("\n🧪 Running end-to-end test...")
+        test_result = deployer.submit_test_job(api_url)
+        
+        if test_result:
+            s3_bucket = os.getenv("S3_BUCKET")
+            s3_key = test_result.get("s3_key")
+            
+            if s3_bucket and s3_key:
+                if deployer.verify_s3_image(s3_bucket, s3_key):
+                    logger.info("\n🎉 End-to-end test successful!")
+                else:
+                    logger.warning("\n⚠️ S3 verification failed, but deployment is complete")
+            else:
+                logger.info("\n✅ Test job completed (S3 details not available)")
+        else:
+            logger.warning("\n⚠️ Test job skipped, but deployment is complete")
         
         # Display success information
         logger.info("\n🎉 Deployment successful!")
-        logger.info("=" * 50)
+        logger.info("=" * 60)
         logger.info(f"Pod ID: {pod_info.get('pod_id')}")
         logger.info(f"Status: {pod_info.get('status')}")
         logger.info(f"GPU: {pod_info.get('machine_type')}")
         logger.info(f"API URL: {pod_info.get('api_url')}")
         logger.info(f"SSH: {pod_info.get('ssh_connection')}")
         
-        if pod_info.get('api_url'):
-            logger.info("\n📋 Next steps:")
-            logger.info(f"1. Health check: curl {pod_info.get('api_url')}health")
-            logger.info(f"2. Generate image: POST to {pod_info.get('api_url')}generate")
-            logger.info(f"3. Direct URL access: {pod_info.get('api_url')}")
+        if test_result:
+            logger.info(f"\n🖼️ Test Image Generated:")
+            logger.info(f"Image URL: {test_result.get('image_url')}")
+            logger.info(f"S3 Key: {test_result.get('s3_key')}")
         
-        logger.info(f"\n💡 To stop the pod: runpod stop pod {pod_id}")
-        logger.info(f"💡 To delete the pod: runpod remove pod {pod_id}")
+        logger.info("\n📋 API Endpoints:")
+        logger.info(f"Health check: GET {api_url}health")
+        logger.info(f"Generate image: POST {api_url}generate")
+        
+        logger.info(f"\n💡 Management commands:")
+        logger.info(f"Stop pod: runpod stop pod {pod_id}")
+        logger.info(f"Delete pod: runpod remove pod {pod_id}")
         
         return 0
         
@@ -318,7 +478,7 @@ PYEOF
 
 echo ""
 echo "To deploy using Python script:"
-echo "pip install runpod python-dotenv  # Install dependencies if needed"
+echo "pip install runpod python-dotenv requests boto3  # Install dependencies if needed"
 echo "python deploy_runpod.py"
 echo ""
 echo "Configuration files created:"

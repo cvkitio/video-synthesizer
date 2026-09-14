@@ -1,0 +1,9 @@
+# Runtime deps for the `simple/` pipeline. Deliberately small — this is the
+# whole point of moving off the self-hosted diffusion stack.
+Pillow>=10.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0  # only used if the caller loads OPENROUTER_API_KEY from .env
+
+# System dep (not pip-installable): ffmpeg on PATH for MP4 encoding.
+# macOS:  brew install ffmpeg
+# Ubuntu: apt-get install -y ffmpeg

@@ -68,3 +68,15 @@ Thumbs.db
 runpod_deploy.json
 runpod_template.json
 deploy_runpod.py
+# --- Credential guards. Never commit these. ---
+.env
+.env.local
+*.pem
+*.key
+credentials
+*-adminsdk-*.json
+.DS_Store
+
+# Third-party AttnGAN checkout (Tao Xu, MIT) — vendored for reference,
+# not ours to redistribute. Clone it separately if needed.
+AttnGAN/
